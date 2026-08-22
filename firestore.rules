@@ -1,0 +1,37 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() { return request.auth != null; }
+    function isAdmin() {
+      return isSignedIn() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    function isOwner(uid) { return isSignedIn() && request.auth.uid == uid; }
+
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow update: if isAdmin() ||
+        (isOwner(uid) && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['phone','address','profilePictureUrl']));
+      allow create: if isSignedIn();
+    }
+    match /attendance/{docId} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.employeeId == request.auth.uid);
+      allow create: if isSignedIn() && request.resource.data.employeeId == request.auth.uid;
+      allow update: if isAdmin() || (isSignedIn() && resource.data.employeeId == request.auth.uid);
+    }
+    match /leaveRequests/{docId} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.employeeId == request.auth.uid);
+      allow create: if isSignedIn() && request.resource.data.employeeId == request.auth.uid;
+      allow update: if isAdmin();
+    }
+    match /payroll/{docId} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.employeeId == request.auth.uid);
+      allow write: if isAdmin();
+    }
+    match /documents/{docId} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.employeeId == request.auth.uid);
+      allow create: if isSignedIn() && request.resource.data.employeeId == request.auth.uid;
+    }
+  }
+}

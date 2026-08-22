@@ -1,5 +1,6 @@
 import { useLocation } from 'react-router-dom';
-import { currentUser } from '../../data/mockData';
+import { useAuth } from '../../context/AuthContext';
+import { currentUser as defaultMockUser } from '../../data/mockData';
 import './TopBar.css';
 
 const routeTitles = {
@@ -19,7 +20,11 @@ const routeTitles = {
 
 export default function TopBar() {
   const location = useLocation();
+  const { profile } = useAuth();
   const title = routeTitles[location.pathname] || 'Dayflow';
+
+  const displayName = profile?.fullName || defaultMockUser.name;
+  const avatarUrl = profile?.profilePictureUrl || defaultMockUser.avatar;
 
   return (
     <header className="topbar">
@@ -30,8 +35,8 @@ export default function TopBar() {
           <span className="topbar__notification-badge">3</span>
         </button>
         <div className="topbar__user">
-          <img src={currentUser.avatar} alt={currentUser.name} className="avatar avatar--sm" />
-          <span className="topbar__user-name">{currentUser.name}</span>
+          <img src={avatarUrl} alt={displayName} className="avatar avatar--sm" />
+          <span className="topbar__user-name">{displayName}</span>
         </div>
       </div>
     </header>

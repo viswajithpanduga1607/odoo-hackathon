@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
 import Sidebar from './components/layout/Sidebar';
 import TopBar from './components/layout/TopBar';
 
@@ -37,38 +38,40 @@ function DashboardLayout() {
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Auth Routes (no sidebar/topbar) */}
-        <Route path="/signup" element={<SignUp />} />
-        <Route path="/signin" element={<SignIn />} />
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Auth Routes (no sidebar/topbar) */}
+          <Route path="/signup" element={<SignUp />} />
+          <Route path="/signin" element={<SignIn />} />
 
-        {/* Employee Routes */}
-        <Route element={<DashboardLayout />}>
-          <Route path="/dashboard" element={<EmployeeDashboard />} />
-          <Route path="/profile" element={<ProfileView />} />
-          <Route path="/profile/edit" element={<ProfileEdit />} />
-          <Route path="/attendance" element={<Attendance />} />
-          <Route path="/leave/apply" element={<LeaveApply />} />
-          <Route path="/payroll" element={<Payroll />} />
-          <Route path="/reports" element={<Reports />} />
-        </Route>
+          {/* Employee Routes */}
+          <Route element={<DashboardLayout />}>
+            <Route path="/dashboard" element={<EmployeeDashboard />} />
+            <Route path="/profile" element={<ProfileView />} />
+            <Route path="/profile/edit" element={<ProfileEdit />} />
+            <Route path="/attendance" element={<Attendance />} />
+            <Route path="/leave/apply" element={<LeaveApply />} />
+            <Route path="/payroll" element={<Payroll />} />
+            <Route path="/reports" element={<Reports />} />
+          </Route>
 
-        {/* Admin Routes */}
-        <Route element={<DashboardLayout />}>
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/employees" element={<EmployeeList />} />
-          <Route path="/admin/profile/edit/:id" element={<AdminProfileEdit />} />
-          <Route path="/admin/profile/edit" element={<AdminProfileEdit />} />
-          <Route path="/admin/leave-approvals" element={<LeaveApprovals />} />
-          <Route path="/admin/payroll" element={<AdminPayroll />} />
-        </Route>
+          {/* Admin Routes */}
+          <Route element={<DashboardLayout />}>
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/employees" element={<EmployeeList />} />
+            <Route path="/admin/profile/edit/:id" element={<AdminProfileEdit />} />
+            <Route path="/admin/profile/edit" element={<AdminProfileEdit />} />
+            <Route path="/admin/leave-approvals" element={<LeaveApprovals />} />
+            <Route path="/admin/payroll" element={<AdminPayroll />} />
+          </Route>
 
-        {/* Default redirect */}
-        <Route path="/" element={<Navigate to="/signin" replace />} />
-        <Route path="*" element={<Navigate to="/signin" replace />} />
-      </Routes>
-    </BrowserRouter>
+          {/* Default redirect */}
+          <Route path="/" element={<Navigate to="/signin" replace />} />
+          <Route path="*" element={<Navigate to="/signin" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 

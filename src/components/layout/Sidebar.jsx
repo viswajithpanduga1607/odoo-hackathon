@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { currentUser } from '../../data/mockData';
+import { useAuth } from '../../context/AuthContext';
+import { currentUser as defaultMockUser } from '../../data/mockData';
 import './Sidebar.css';
 
 const employeeNav = [
@@ -22,10 +23,20 @@ const adminNav = [
 
 export default function Sidebar() {
   const navigate = useNavigate();
-  const isAdmin = currentUser.role === 'admin';
+  const { profile, role, logout } = useAuth();
+
+  const isAdmin = (role || defaultMockUser.role) === 'admin';
   const navItems = isAdmin ? adminNav : employeeNav;
 
-  const handleLogout = () => {
+  const displayName = profile?.fullName || defaultMockUser.name;
+  const avatarUrl = profile?.profilePictureUrl || defaultMockUser.avatar;
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
     navigate('/signin');
   };
 
@@ -56,9 +67,9 @@ export default function Sidebar() {
 
       <div className="sidebar__footer">
         <div className="sidebar__user">
-          <img src={currentUser.avatar} alt={currentUser.name} className="avatar avatar--sm" />
+          <img src={avatarUrl} alt={displayName} className="avatar avatar--sm" />
           <div className="sidebar__user-info">
-            <span className="sidebar__user-name">{currentUser.name}</span>
+            <span className="sidebar__user-name">{displayName}</span>
             <span className="sidebar__user-role">{isAdmin ? 'HR Admin' : 'Employee'}</span>
           </div>
         </div>
