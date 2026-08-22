@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { signUpUser, validatePassword } from '../../firebase/authService';
-import { EyeIcon, EyeOffIcon, AlertIcon, MailIcon } from '../../components/common/Icons';
+import { EyeIcon, EyeOffIcon, AlertIcon, CheckCircleIcon } from '../../components/common/Icons';
 
 export default function SignUp() {
   const navigate = useNavigate();
@@ -65,7 +65,7 @@ export default function SignUp() {
         role: form.role,
       });
 
-      setSuccessMessage(result.message || 'Account created! A verification email has been sent. Please verify your email before signing in.');
+      setSuccessMessage(result.message || 'Account created successfully! You can now sign in with your credentials.');
       setForm({
         employeeId: '',
         fullName: '',
@@ -115,12 +115,12 @@ export default function SignUp() {
           {successMessage && (
             <div className="alert alert--success" style={{ marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <MailIcon size={18} />
-                <span style={{ fontWeight: 600 }}>Verification Required</span>
+                <CheckCircleIcon size={18} />
+                <span style={{ fontWeight: 600 }}>Account Created!</span>
               </div>
               <p style={{ fontSize: 'var(--text-sm)', lineHeight: '1.4' }}>{successMessage}</p>
               <Link to="/signin" className="btn btn--primary btn--sm" style={{ marginTop: '0.5rem', alignSelf: 'flex-start' }}>
-                Proceed to Sign In →
+                Sign In Now →
               </Link>
             </div>
           )}

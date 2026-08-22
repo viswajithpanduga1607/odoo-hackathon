@@ -1,48 +1,24 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { signInUser, resendVerificationEmail } from '../../firebase/authService';
-import { EyeIcon, EyeOffIcon, AlertIcon, CheckCircleIcon, MailIcon } from '../../components/common/Icons';
+import { signInUser } from '../../firebase/authService';
+import { EyeIcon, EyeOffIcon, AlertIcon } from '../../components/common/Icons';
 
 export default function SignIn() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
-  const [successInfo, setSuccessInfo] = useState('');
-  const [isUnverified, setIsUnverified] = useState(false);
-  const [resending, setResending] = useState(false);
   const [loading, setLoading] = useState(false);
   const [remember, setRemember] = useState(false);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     if (error) setError('');
-    if (successInfo) setSuccessInfo('');
-  };
-
-  const handleResendVerification = async () => {
-    if (!form.email || !form.password) {
-      setError('Please provide your email and password to resend the verification email.');
-      return;
-    }
-    setResending(true);
-    setError('');
-    setSuccessInfo('');
-    try {
-      const res = await resendVerificationEmail(form.email, form.password);
-      setSuccessInfo(res.message || 'Verification email resent! Please check your inbox.');
-    } catch (err) {
-      setError(err.message || 'Failed to resend verification email.');
-    } finally {
-      setResending(false);
-    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    setSuccessInfo('');
-    setIsUnverified(false);
 
     if (!form.email.trim() || !form.password) {
       setError('Please enter both email address and password.');
@@ -66,10 +42,7 @@ export default function SignIn() {
       }
     } catch (err) {
       console.error('Sign In error:', err);
-      if (err.code === 'auth/email-not-verified') {
-        setIsUnverified(true);
-        setError('Your email is not verified yet. Please click the verification link sent to your inbox before signing in.');
-      } else if (
+      if (
         err.code === 'auth/user-not-found' ||
         err.code === 'auth/wrong-password' ||
         err.code === 'auth/invalid-credential'
@@ -103,30 +76,9 @@ export default function SignIn() {
           <p className="auth-form__subtitle">Enter your credentials to access your account</p>
 
           {error && (
-            <div className="alert alert--error" style={{ marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <AlertIcon size={18} />
-                <span>{error}</span>
-              </div>
-              {isUnverified && (
-                <button
-                  type="button"
-                  onClick={handleResendVerification}
-                  disabled={resending}
-                  className="btn btn--secondary btn--sm"
-                  style={{ alignSelf: 'flex-start', marginTop: '0.25rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
-                >
-                  <MailIcon size={14} />
-                  <span>{resending ? 'Resending...' : 'Resend Verification Email'}</span>
-                </button>
-              )}
-            </div>
-          )}
-
-          {successInfo && (
-            <div className="alert alert--success" style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <CheckCircleIcon size={18} />
-              <span>{successInfo}</span>
+            <div className="alert alert--error" style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <AlertIcon size={18} />
+              <span>{error}</span>
             </div>
           )}
 

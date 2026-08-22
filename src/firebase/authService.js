@@ -1,7 +1,6 @@
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  sendEmailVerification,
   signOut,
   updateProfile,
 } from 'firebase/auth';
@@ -32,9 +31,8 @@ export function validatePassword(password) {
  * Sign up a new user:
  * 1. Validate password client-side
  * 2. Create user with Firebase Auth
- * 3. Send email verification
- * 4. Create document in Firestore users/{uid} collection
- * 5. Sign out immediately to block login until email is verified
+ * 3. Create document in Firestore users/{uid} collection
+ * Note: No email verification required — user can sign in immediately after registration.
  */
 export async function signUpUser({
   employeeId,
@@ -64,10 +62,7 @@ export async function signUpUser({
     await updateProfile(user, { displayName: fullName }).catch(() => {});
   }
 
-  // 3. Send verification email
-  await sendEmailVerification(user);
-
-  // 4. Create document in users/{uid}
+  // 3. Create document in users/{uid}
   const defaultAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(fullName || employeeId || email)}`;
   const userDocData = {
     employeeId: employeeId?.trim() || `EMP-${Date.now().toString().slice(-4)}`,
@@ -85,37 +80,23 @@ export async function signUpUser({
 
   await setDoc(userDocRef(user.uid), userDocData);
 
-  // 5. Sign out immediately to prevent login before verification
-  await signOut(auth);
-
   return {
     success: true,
     user,
     profile: userDocData,
-    message: 'Verification email sent! Please check your inbox and verify your email before signing in.',
+    message: 'Account created successfully! You can now sign in.',
   };
 }
 
 /**
  * Sign in existing user:
  * 1. Authenticate with email & password
- * 2. Check if email is verified. If not, sign out and throw error
- * 3. Fetch user profile from Firestore users/{uid}
- * 4. Return user, profile, and role for routing
+ * 2. Fetch user profile from Firestore users/{uid}
+ * 3. Return user, profile, and role for routing
  */
 export async function signInUser({ email, password }) {
   const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
   const user = userCredential.user;
-
-  // Check email verification status
-  if (!user.emailVerified) {
-    // Block unverified user
-    await signOut(auth);
-    const error = new Error('Email not verified. Please verify your email before logging in. A verification email was sent to your address.');
-    error.code = 'auth/email-not-verified';
-    error.unverifiedUser = user;
-    throw error;
-  }
 
   // Fetch Firestore user doc
   const docSnap = await getDoc(userDocRef(user.uid));
@@ -143,20 +124,6 @@ export async function signInUser({ email, password }) {
     profile,
     role: profile.role || 'employee',
   };
-}
-
-/**
- * Resend verification email to user
- */
-export async function resendVerificationEmail(email, password) {
-  try {
-    const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
-    await sendEmailVerification(userCredential.user);
-    await signOut(auth);
-    return { success: true, message: 'A new verification email has been sent.' };
-  } catch (err) {
-    throw new Error(err.message || 'Failed to resend verification email.');
-  }
 }
 
 /**
