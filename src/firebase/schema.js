@@ -47,6 +47,11 @@ import { db } from './config';
  *    - fileName: string
  *    - filePath: string
  *    - uploadedAt: string | timestamp
+ * 
+ * 6. mail/{docId} (Trigger Email Extension)
+ *    - to: string | string[]
+ *    - message: { subject: string, text: string, html: string }
+ *    - createdAt: string | timestamp
  */
 
 export const COLLECTIONS = {
@@ -55,6 +60,7 @@ export const COLLECTIONS = {
   LEAVE_REQUESTS: 'leaveRequests',
   PAYROLL: 'payroll',
   DOCUMENTS: 'documents',
+  MAIL: 'mail',
 };
 
 // Firestore Collection References
@@ -63,6 +69,7 @@ export const attendanceCol = collection(db, COLLECTIONS.ATTENDANCE);
 export const leaveRequestsCol = collection(db, COLLECTIONS.LEAVE_REQUESTS);
 export const payrollCol = collection(db, COLLECTIONS.PAYROLL);
 export const documentsCol = collection(db, COLLECTIONS.DOCUMENTS);
+export const mailCol = collection(db, COLLECTIONS.MAIL);
 
 // Helpers for specific document refs
 export const userDocRef = (uid) => doc(db, COLLECTIONS.USERS, uid);
@@ -70,3 +77,4 @@ export const attendanceDocRef = (docId) => doc(db, COLLECTIONS.ATTENDANCE, docId
 export const leaveRequestDocRef = (docId) => doc(db, COLLECTIONS.LEAVE_REQUESTS, docId);
 export const payrollDocRef = (docId) => doc(db, COLLECTIONS.PAYROLL, docId);
 export const documentDocRef = (docId) => doc(db, COLLECTIONS.DOCUMENTS, docId);
+export const mailDocRef = (docId) => doc(db, COLLECTIONS.MAIL, docId);

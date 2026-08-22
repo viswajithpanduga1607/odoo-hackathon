@@ -26,12 +26,16 @@ service cloud.firestore {
       allow update: if isAdmin();
     }
     match /payroll/{docId} {
-      allow read: if isAdmin() || (isSignedIn() && resource.data.employeeId == request.auth.uid);
+      allow read: if isAdmin() || (isSignedIn() && (docId == request.auth.uid || resource.data.employeeId == request.auth.uid));
       allow write: if isAdmin();
     }
     match /documents/{docId} {
       allow read: if isAdmin() || (isSignedIn() && resource.data.employeeId == request.auth.uid);
       allow create: if isSignedIn() && request.resource.data.employeeId == request.auth.uid;
+    }
+    match /mail/{docId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin() || isSignedIn();
     }
   }
 }

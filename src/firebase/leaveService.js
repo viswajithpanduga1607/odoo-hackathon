@@ -1,6 +1,7 @@
 import {
   collection,
   doc,
+  getDoc,
   getDocs,
   addDoc,
   updateDoc,
@@ -8,7 +9,8 @@ import {
   where,
 } from 'firebase/firestore';
 import { db } from './config';
-import { leaveRequestsCol, leaveRequestDocRef } from './schema';
+import { leaveRequestsCol, leaveRequestDocRef, userDocRef } from './schema';
+import { sendLeaveStatusEmailTrigger } from './emailService';
 
 /**
  * Apply for leave
@@ -31,6 +33,7 @@ export async function applyForLeave({
 
   const leaveDocData = {
     employeeId: uid,
+    employeeEmail: profile.email || '',
     employeeDisplayId: profile.employeeId || '',
     employeeName: profile.fullName || 'Employee',
     avatar: profile.profilePictureUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(profile.fullName || uid)}`,
@@ -71,12 +74,17 @@ export async function fetchAllLeaveRequests() {
 
 /**
  * Review leave request (Approve / Reject) (Admin only)
+ * Updates status in Firestore and triggers an email notification to the employee
  */
 export async function reviewLeaveRequest(docId, { status, adminComment = '', adminName = 'Admin' }) {
   if (!docId) throw new Error('Leave request ID is required');
   if (!['approved', 'rejected'].includes(status)) {
     throw new Error('Invalid status. Must be "approved" or "rejected".');
   }
+
+  // Get current leave request details for email alert
+  const reqSnap = await getDoc(leaveRequestDocRef(docId));
+  const currentData = reqSnap.exists() ? reqSnap.data() : {};
 
   const updateData = {
     status,
@@ -85,6 +93,39 @@ export async function reviewLeaveRequest(docId, { status, adminComment = '', adm
     reviewedAt: new Date().toISOString(),
   };
 
+  // Update in Firestore
   await updateDoc(leaveRequestDocRef(docId), updateData);
+
+  // Trigger Email Alert
+  try {
+    let employeeEmail = currentData.employeeEmail;
+    let employeeName = currentData.employeeName || 'Employee';
+
+    // If employee email wasn't on the request doc, fetch from users/{employeeId}
+    if (!employeeEmail && currentData.employeeId) {
+      const userSnap = await getDoc(userDocRef(currentData.employeeId));
+      if (userSnap.exists()) {
+        const udata = userSnap.data();
+        employeeEmail = udata.email;
+        employeeName = udata.fullName || employeeName;
+      }
+    }
+
+    if (employeeEmail) {
+      await sendLeaveStatusEmailTrigger({
+        employeeEmail,
+        employeeName,
+        status,
+        startDate: currentData.startDate || 'N/A',
+        endDate: currentData.endDate || 'N/A',
+        days: currentData.days || 1,
+        adminComment: adminComment || '',
+        leaveRequestId: docId,
+      });
+    }
+  } catch (emailErr) {
+    console.error('Email alert trigger error (non-fatal):', emailErr);
+  }
+
   return { success: true, ...updateData };
 }
