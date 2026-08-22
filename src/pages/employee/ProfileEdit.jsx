@@ -1,49 +1,141 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { currentUser, employees } from '../../data/mockData';
+import { useAuth } from '../../context/AuthContext';
+import { fetchUserProfile, updateEmployeeSelfProfile } from '../../firebase/userService';
 
 export default function ProfileEdit() {
   const navigate = useNavigate();
-  const employee = employees.find(e => e.id === currentUser.id) || employees[0];
+  const { user, profile: authProfile, setUserProfile } = useAuth();
+  const [profile, setProfile] = useState(authProfile);
+  const [loading, setLoading] = useState(!authProfile);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const [form, setForm] = useState({
-    phone: employee.phone,
-    street: '123 Tech Lane',
-    city: 'San Francisco',
-    state: 'CA',
-    zip: '94105',
+    phone: '',
+    address: '',
+    profilePictureUrl: '',
   });
+
+  useEffect(() => {
+    async function load() {
+      if (user?.uid) {
+        try {
+          const liveProfile = await fetchUserProfile(user.uid);
+          if (liveProfile) {
+            setProfile(liveProfile);
+            setForm({
+              phone: liveProfile.phone || '',
+              address: liveProfile.address || '',
+              profilePictureUrl: liveProfile.profilePictureUrl || '',
+            });
+          }
+        } catch (err) {
+          console.error('Error loading profile:', err);
+        } finally {
+          setLoading(false);
+        }
+      }
+    }
+    load();
+  }, [user]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+    if (error) setError('');
+    if (success) setSuccess('');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Mock save
-    navigate('/profile');
+    if (!user?.uid) return;
+    setSaving(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      // Updates only phone, address, profilePictureUrl according to security rules
+      await updateEmployeeSelfProfile(user.uid, {
+        phone: form.phone,
+        address: form.address,
+        profilePictureUrl: form.profilePictureUrl || profile?.profilePictureUrl,
+      });
+
+      const updated = { ...profile, ...form };
+      setProfile(updated);
+      setUserProfile(updated);
+      setSuccess('Profile updated successfully!');
+      setTimeout(() => {
+        navigate('/profile');
+      }, 1200);
+    } catch (err) {
+      console.error('Profile update error:', err);
+      setError(err.message || 'Failed to update profile. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
+
+  const displayName = profile?.fullName || user?.displayName || 'Employee';
+  const displayEmail = profile?.email || user?.email || 'employee@dayflow.io';
+  const displayId = profile?.employeeId || 'EMP-2024-001';
+  const displayRole = profile?.jobTitle || profile?.designation || 'Software Engineer';
+  const displayDepartment = profile?.department || 'Engineering';
+  const displayDateJoined = profile?.dateJoined || '2024-01-15';
+  const displayAvatar = form.profilePictureUrl || profile?.profilePictureUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(displayName)}`;
+
+  if (loading) {
+    return (
+      <div style={{ padding: 'var(--space-8)', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+        Loading profile...
+      </div>
+    );
+  }
 
   return (
     <div>
       <div className="page-header">
         <div>
           <h1 className="page-title">Edit Profile</h1>
-          <p className="page-subtitle">Update your personal information</p>
+          <p className="page-subtitle">Update your personal contact details</p>
         </div>
       </div>
+
+      {error && (
+        <div className="alert alert--error" style={{ marginBottom: 'var(--space-6)' }}>
+          <span>⚠️</span>
+          <span>{error}</span>
+        </div>
+      )}
+
+      {success && (
+        <div className="alert alert--success" style={{ marginBottom: 'var(--space-6)' }}>
+          <span>✅</span>
+          <span>{success}</span>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit}>
         {/* Profile Picture */}
         <div className="card" style={{ marginBottom: 'var(--space-6)', display: 'flex', alignItems: 'center', gap: 'var(--space-6)' }}>
           <div className="profile-avatar-wrapper">
-            <img src={employee.avatar} alt={employee.name} className="profile-avatar" style={{ width: '80px', height: '80px' }} />
+            <img src={displayAvatar} alt={displayName} className="profile-avatar" style={{ width: '80px', height: '80px' }} />
             <div className="profile-avatar-edit">📷</div>
           </div>
-          <div>
-            <h3 style={{ color: 'var(--color-text-primary)', fontFamily: 'var(--font-headline)', fontWeight: 600 }}>{employee.name}</h3>
-            <p style={{ color: 'var(--color-text-muted)', fontSize: 'var(--text-sm)', marginTop: 'var(--space-1)' }}>{employee.id}</p>
-            <button type="button" className="btn btn--ghost btn--sm" style={{ marginTop: 'var(--space-2)' }}>Change Photo</button>
+          <div style={{ flex: 1 }}>
+            <h3 style={{ color: 'var(--color-text-primary)', fontFamily: 'var(--font-headline)', fontWeight: 600 }}>{displayName}</h3>
+            <p style={{ color: 'var(--color-text-muted)', fontSize: 'var(--text-sm)', marginTop: 'var(--space-1)' }}>{displayId}</p>
+            <div style={{ marginTop: 'var(--space-3)', maxWidth: '400px' }}>
+              <input
+                type="text"
+                name="profilePictureUrl"
+                className="form-input"
+                placeholder="Custom Avatar/Image URL"
+                value={form.profilePictureUrl}
+                onChange={handleChange}
+              />
+            </div>
           </div>
         </div>
 
@@ -56,19 +148,26 @@ export default function ProfileEdit() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
               <div className="form-group">
                 <label className="form-label">Full Name 🔒</label>
-                <input type="text" className="form-input" value={employee.name} disabled />
+                <input type="text" className="form-input" value={displayName} disabled />
               </div>
               <div className="form-group">
                 <label className="form-label">Email 🔒</label>
-                <input type="email" className="form-input" value={employee.email} disabled />
+                <input type="email" className="form-input" value={displayEmail} disabled />
               </div>
               <div className="form-group">
-                <label className="form-label">Phone Number</label>
-                <input type="tel" name="phone" className="form-input" value={form.phone} onChange={handleChange} />
+                <label className="form-label">Phone Number (Editable)</label>
+                <input
+                  type="tel"
+                  name="phone"
+                  className="form-input"
+                  placeholder="+1 (555) 000-0000"
+                  value={form.phone}
+                  onChange={handleChange}
+                />
               </div>
               <div className="form-group">
                 <label className="form-label">Date of Birth 🔒</label>
-                <input type="text" className="form-input" value={new Date(employee.dob).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} disabled />
+                <input type="text" className="form-input" value={profile?.dob || '1992-05-15'} disabled />
               </div>
             </div>
           </div>
@@ -80,20 +179,15 @@ export default function ProfileEdit() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
               <div className="form-group">
-                <label className="form-label">Street Address</label>
-                <input type="text" name="street" className="form-input" value={form.street} onChange={handleChange} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">City</label>
-                <input type="text" name="city" className="form-input" value={form.city} onChange={handleChange} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">State</label>
-                <input type="text" name="state" className="form-input" value={form.state} onChange={handleChange} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Zip Code</label>
-                <input type="text" name="zip" className="form-input" value={form.zip} onChange={handleChange} />
+                <label className="form-label">Full Address (Editable)</label>
+                <textarea
+                  name="address"
+                  className="form-textarea"
+                  placeholder="e.g. 123 Tech Lane, San Francisco, CA 94105"
+                  value={form.address}
+                  onChange={handleChange}
+                  style={{ minHeight: '120px' }}
+                />
               </div>
             </div>
           </div>
@@ -107,15 +201,15 @@ export default function ProfileEdit() {
             <div className="grid-3">
               <div className="form-group">
                 <label className="form-label">Department 🔒</label>
-                <input type="text" className="form-input" value={employee.department} disabled />
+                <input type="text" className="form-input" value={displayDepartment} disabled />
               </div>
               <div className="form-group">
                 <label className="form-label">Designation 🔒</label>
-                <input type="text" className="form-input" value={employee.designation} disabled />
+                <input type="text" className="form-input" value={displayRole} disabled />
               </div>
               <div className="form-group">
                 <label className="form-label">Date of Joining 🔒</label>
-                <input type="text" className="form-input" value={employee.joiningDate} disabled />
+                <input type="text" className="form-input" value={displayDateJoined} disabled />
               </div>
             </div>
           </div>
@@ -123,8 +217,10 @@ export default function ProfileEdit() {
 
         {/* Actions */}
         <div style={{ display: 'flex', gap: 'var(--space-4)', justifyContent: 'flex-end', marginTop: 'var(--space-8)' }}>
-          <Link to="/profile" className="btn btn--secondary">Cancel</Link>
-          <button type="submit" className="btn btn--primary">Save Changes</button>
+          <Link to="/profile" className="btn btn--secondary" disabled={saving}>Cancel</Link>
+          <button type="submit" className="btn btn--primary" disabled={saving}>
+            {saving ? 'Saving Changes...' : 'Save Changes'}
+          </button>
         </div>
       </form>
     </div>
