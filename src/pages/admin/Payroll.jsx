@@ -1,6 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { fetchAllPayrolls, updateEmployeePayroll } from '../../firebase/payrollService';
+import {
+  PayrollIcon,
+  CheckCircleIcon,
+  ClockPendingIcon,
+  CreditCardIcon,
+  AlertIcon,
+  EditIcon,
+  XIcon,
+} from '../../components/common/Icons';
 
 export default function AdminPayroll() {
   const { user } = useAuth();
@@ -91,22 +100,27 @@ export default function AdminPayroll() {
             <option>July 2026</option>
             <option>June 2026</option>
           </select>
-          <button className="btn btn--primary" onClick={() => setSuccess('All pending payrolls marked as processed!')}>
-            💳 Process Payroll
+          <button
+            className="btn btn--primary"
+            onClick={() => setSuccess('All pending payrolls marked as processed!')}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+          >
+            <CreditCardIcon size={16} />
+            <span>Process Payroll</span>
           </button>
         </div>
       </div>
 
       {error && (
-        <div className="alert alert--error" style={{ marginBottom: 'var(--space-6)' }}>
-          <span>⚠️</span>
+        <div className="alert alert--error" style={{ marginBottom: 'var(--space-6)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <AlertIcon size={18} />
           <span>{error}</span>
         </div>
       )}
 
       {success && (
-        <div className="alert alert--success" style={{ marginBottom: 'var(--space-6)' }}>
-          <span>✅</span>
+        <div className="alert alert--success" style={{ marginBottom: 'var(--space-6)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <CheckCircleIcon size={18} />
           <span>{success}</span>
         </div>
       )}
@@ -114,21 +128,27 @@ export default function AdminPayroll() {
       {/* Stats */}
       <div className="grid-3" style={{ marginBottom: 'var(--space-6)' }}>
         <div className="stat-card">
-          <div className="stat-card__icon stat-card__icon--indigo">💰</div>
+          <div className="stat-card__icon stat-card__icon--indigo" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+            <PayrollIcon size={20} />
+          </div>
           <div>
             <div className="stat-card__value">₹{totalPayrollCost.toLocaleString()}</div>
             <div className="stat-card__label">Total Monthly Payroll Cost</div>
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-card__icon stat-card__icon--emerald">✅</div>
+          <div className="stat-card__icon stat-card__icon--emerald" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+            <CheckCircleIcon size={20} />
+          </div>
           <div>
             <div className="stat-card__value">{processedCount}</div>
             <div className="stat-card__label">Processed</div>
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-card__icon stat-card__icon--amber">⏳</div>
+          <div className="stat-card__icon stat-card__icon--amber" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+            <ClockPendingIcon size={20} />
+          </div>
           <div>
             <div className="stat-card__value">{pendingCount}</div>
             <div className="stat-card__label">Pending</div>
@@ -212,8 +232,10 @@ export default function AdminPayroll() {
                               className="btn btn--ghost btn--sm"
                               onClick={() => isEditing ? setEditingId(null) : handleEdit(emp)}
                               title={isEditing ? 'Cancel' : 'Edit Salary Structure'}
+                              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}
                             >
-                              {isEditing ? '✕' : '✏️ Edit'}
+                              {isEditing ? <XIcon size={14} /> : <EditIcon size={13} />}
+                              <span>{isEditing ? 'Close' : 'Edit'}</span>
                             </button>
                           </div>
                         </td>

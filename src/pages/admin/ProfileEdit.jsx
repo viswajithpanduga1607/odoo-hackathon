@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { fetchAllEmployees, updateAdminUserProfile } from '../../firebase/userService';
 import { employees as mockEmployees, getSalaryBreakdown } from '../../data/mockData';
+import { CameraIcon, AlertIcon, CheckCircleIcon } from '../../components/common/Icons';
 
 export default function AdminProfileEdit() {
   const { id } = useParams();
@@ -144,15 +145,15 @@ export default function AdminProfileEdit() {
       </div>
 
       {error && (
-        <div className="alert alert--error" style={{ marginBottom: 'var(--space-6)' }}>
-          <span>⚠️</span>
+        <div className="alert alert--error" style={{ marginBottom: 'var(--space-6)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <AlertIcon size={18} />
           <span>{error}</span>
         </div>
       )}
 
       {success && (
-        <div className="alert alert--success" style={{ marginBottom: 'var(--space-6)' }}>
-          <span>✅</span>
+        <div className="alert alert--success" style={{ marginBottom: 'var(--space-6)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <CheckCircleIcon size={18} />
           <span>{success}</span>
         </div>
       )}
@@ -176,7 +177,9 @@ export default function AdminProfileEdit() {
         <div className="card" style={{ marginBottom: 'var(--space-6)', display: 'flex', alignItems: 'center', gap: 'var(--space-6)' }}>
           <div className="profile-avatar-wrapper">
             <img src={avatarUrl} alt={form.fullName} className="profile-avatar" style={{ width: '80px', height: '80px' }} />
-            <div className="profile-avatar-edit">📷</div>
+            <div className="profile-avatar-edit" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+              <CameraIcon size={14} color="#FFFFFF" />
+            </div>
           </div>
           <div style={{ flex: 1 }}>
             <h3 style={{ color: 'var(--color-text-primary)', fontFamily: 'var(--font-headline)', fontWeight: 600 }}>{form.fullName}</h3>

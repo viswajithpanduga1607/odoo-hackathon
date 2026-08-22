@@ -1,6 +1,8 @@
+import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { currentUser as defaultMockUser } from '../../data/mockData';
+import { BellIcon } from '../common/Icons';
 import './TopBar.css';
 
 const routeTitles = {
@@ -30,8 +32,10 @@ export default function TopBar() {
     <header className="topbar">
       <div className="topbar__title">{title}</div>
       <div className="topbar__actions">
-        <button className="topbar__notification">
-          <span>🔔</span>
+        <button className="topbar__notification" title="Notifications">
+          <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+            <BellIcon size={18} />
+          </span>
           <span className="topbar__notification-badge">3</span>
         </button>
         <div className="topbar__user">

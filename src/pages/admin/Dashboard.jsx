@@ -5,6 +5,12 @@ import { fetchAllEmployees } from '../../firebase/userService';
 import { fetchAllLeaveRequests, reviewLeaveRequest } from '../../firebase/leaveService';
 import { fetchAllAttendance } from '../../firebase/attendanceService';
 import { employees as mockEmployees, leaveRequests as mockLeaveRequests } from '../../data/mockData';
+import {
+  EmployeesIcon,
+  CheckCircleIcon,
+  LeaveIcon,
+  PayrollIcon,
+} from '../../components/common/Icons';
 
 export default function AdminDashboard() {
   const { user, profile } = useAuth();
@@ -67,10 +73,10 @@ export default function AdminDashboard() {
   });
 
   const stats = [
-    { icon: '👥', label: 'Total Employees', value: employees.length, color: 'indigo' },
-    { icon: '✅', label: 'Present Today', value: presentToday, color: 'emerald' },
-    { icon: '📅', label: 'Pending Leaves', value: pendingLeaves.length, color: 'amber' },
-    { icon: '💰', label: 'Payroll Due', value: '₹4.85L', color: 'purple' },
+    { icon: <EmployeesIcon size={20} />, label: 'Total Employees', value: employees.length, color: 'indigo' },
+    { icon: <CheckCircleIcon size={20} />, label: 'Present Today', value: presentToday, color: 'emerald' },
+    { icon: <LeaveIcon size={20} />, label: 'Pending Leaves', value: pendingLeaves.length, color: 'amber' },
+    { icon: <PayrollIcon size={20} />, label: 'Payroll Due', value: '₹4.85L', color: 'purple' },
   ];
 
   return (
@@ -86,7 +92,9 @@ export default function AdminDashboard() {
       <div className="grid-4" style={{ marginBottom: 'var(--space-8)' }}>
         {stats.map((stat, i) => (
           <div key={i} className="stat-card">
-            <div className={`stat-card__icon stat-card__icon--${stat.color}`}>{stat.icon}</div>
+            <div className={`stat-card__icon stat-card__icon--${stat.color}`} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+              {stat.icon}
+            </div>
             <div>
               <div className="stat-card__value">{stat.value}</div>
               <div className="stat-card__label">{stat.label}</div>
@@ -169,7 +177,7 @@ export default function AdminDashboard() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
             {pendingLeaves.length === 0 ? (
               <p style={{ color: 'var(--color-text-muted)', fontSize: 'var(--text-sm)', textAlign: 'center', padding: 'var(--space-6)' }}>
-                No pending leave approvals 🎉
+                No pending leave approvals
               </p>
             ) : (
               pendingLeaves.slice(0, 4).map(lr => {

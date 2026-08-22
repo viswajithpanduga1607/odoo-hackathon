@@ -4,6 +4,17 @@ import { useAuth } from '../../context/AuthContext';
 import { fetchEmployeeAttendance } from '../../firebase/attendanceService';
 import { fetchEmployeeLeaveRequests } from '../../firebase/leaveService';
 import { recentActivities } from '../../data/mockData';
+import {
+  ProfileIcon,
+  AttendanceIcon,
+  LeaveIcon,
+  PayrollIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  ClockPendingIcon,
+  CheckIcon,
+  XIcon,
+} from '../../components/common/Icons';
 
 export default function Dashboard() {
   const { user, profile } = useAuth();
@@ -43,10 +54,10 @@ export default function Dashboard() {
   const remainingLeaves = Math.max(0, 15 - approvedLeaves);
 
   const quickCards = [
-    { icon: '👤', title: 'My Profile', stat: `${profile?.department || 'Engineering'} · ${profile?.jobTitle || 'Developer'}`, color: 'indigo', path: '/profile' },
-    { icon: '🕐', title: 'Attendance', stat: `${presentCount} recorded shifts`, color: 'emerald', path: '/attendance' },
-    { icon: '📅', title: 'Leave Requests', stat: `${remainingLeaves} paid leaves left`, color: 'amber', path: '/leave/apply' },
-    { icon: '💰', title: 'Payroll', stat: 'View salary breakdown', color: 'purple', path: '/payroll' },
+    { icon: <ProfileIcon size={24} />, title: 'My Profile', stat: `${profile?.department || 'Engineering'} · ${profile?.jobTitle || 'Developer'}`, color: 'indigo', path: '/profile' },
+    { icon: <AttendanceIcon size={24} />, title: 'Attendance', stat: `${presentCount} recorded shifts`, color: 'emerald', path: '/attendance' },
+    { icon: <LeaveIcon size={24} />, title: 'Leave Requests', stat: `${remainingLeaves} paid leaves left`, color: 'amber', path: '/leave/apply' },
+    { icon: <PayrollIcon size={24} />, title: 'Payroll', stat: 'View salary breakdown', color: 'purple', path: '/payroll' },
   ];
 
   return (
@@ -78,8 +89,14 @@ export default function Dashboard() {
           <div className="activity-feed">
             {leaveList.slice(0, 3).map(lr => (
               <div key={lr.id} className="activity-item">
-                <span className="activity-item__icon">
-                  {(lr.status || '').toLowerCase() === 'approved' ? '✅' : (lr.status || '').toLowerCase() === 'rejected' ? '❌' : '⏳'}
+                <span className="activity-item__icon" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                  {(lr.status || '').toLowerCase() === 'approved' ? (
+                    <CheckCircleIcon size={16} color="var(--color-success)" />
+                  ) : (lr.status || '').toLowerCase() === 'rejected' ? (
+                    <XCircleIcon size={16} color="var(--color-error)" />
+                  ) : (
+                    <ClockPendingIcon size={16} color="var(--color-warning)" />
+                  )}
                 </span>
                 <div className="activity-item__content">
                   <p className="activity-item__text">
@@ -91,7 +108,9 @@ export default function Dashboard() {
             ))}
             {recentActivities.slice(0, 3).map(activity => (
               <div key={activity.id} className="activity-item">
-                <span className="activity-item__icon">{activity.icon}</span>
+                <span className="activity-item__icon" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                  <CheckCircleIcon size={16} color="var(--color-primary)" />
+                </span>
                 <div className="activity-item__content">
                   <p className="activity-item__text">{activity.text}</p>
                   <span className="activity-item__time">{activity.time}</span>
@@ -107,28 +126,36 @@ export default function Dashboard() {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
             <div className="stat-card">
-              <div className="stat-card__icon stat-card__icon--emerald">✓</div>
+              <div className="stat-card__icon stat-card__icon--emerald" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                <CheckIcon size={18} />
+              </div>
               <div>
                 <div className="stat-card__value">{presentCount}</div>
                 <div className="stat-card__label">Days Present</div>
               </div>
             </div>
             <div className="stat-card">
-              <div className="stat-card__icon stat-card__icon--red">✗</div>
+              <div className="stat-card__icon stat-card__icon--red" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                <XIcon size={18} />
+              </div>
               <div>
                 <div className="stat-card__value">{absentCount}</div>
                 <div className="stat-card__label">Days Absent</div>
               </div>
             </div>
             <div className="stat-card">
-              <div className="stat-card__icon stat-card__icon--amber">½</div>
+              <div className="stat-card__icon stat-card__icon--amber" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                <ClockPendingIcon size={18} />
+              </div>
               <div>
                 <div className="stat-card__value">{halfDayCount}</div>
                 <div className="stat-card__label">Half Days</div>
               </div>
             </div>
             <div className="stat-card">
-              <div className="stat-card__icon stat-card__icon--indigo">📅</div>
+              <div className="stat-card__icon stat-card__icon--indigo" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                <LeaveIcon size={18} />
+              </div>
               <div>
                 <div className="stat-card__value">{leaveCount}</div>
                 <div className="stat-card__label">Leaves Taken</div>

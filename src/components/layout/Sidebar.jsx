@@ -1,24 +1,36 @@
+import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { currentUser as defaultMockUser } from '../../data/mockData';
+import {
+  DashboardIcon,
+  ProfileIcon,
+  EmployeesIcon,
+  AttendanceIcon,
+  LeaveIcon,
+  LeaveApprovalIcon,
+  PayrollIcon,
+  ReportsIcon,
+  LogoutIcon,
+} from '../common/Icons';
 import './Sidebar.css';
 
 const employeeNav = [
-  { path: '/dashboard', label: 'Dashboard', icon: '📊' },
-  { path: '/profile', label: 'Profile', icon: '👤' },
-  { path: '/attendance', label: 'Attendance', icon: '🕐' },
-  { path: '/leave/apply', label: 'Leave', icon: '📅' },
-  { path: '/payroll', label: 'Payroll', icon: '💰' },
-  { path: '/reports', label: 'Reports', icon: '📈' },
+  { path: '/dashboard', label: 'Dashboard', icon: <DashboardIcon size={18} /> },
+  { path: '/profile', label: 'Profile', icon: <ProfileIcon size={18} /> },
+  { path: '/attendance', label: 'Attendance', icon: <AttendanceIcon size={18} /> },
+  { path: '/leave/apply', label: 'Leave', icon: <LeaveIcon size={18} /> },
+  { path: '/payroll', label: 'Payroll', icon: <PayrollIcon size={18} /> },
+  { path: '/reports', label: 'Reports', icon: <ReportsIcon size={18} /> },
 ];
 
 const adminNav = [
-  { path: '/admin/dashboard', label: 'Dashboard', icon: '📊' },
-  { path: '/admin/employees', label: 'Employees', icon: '👥' },
-  { path: '/attendance', label: 'Attendance', icon: '🕐' },
-  { path: '/admin/leave-approvals', label: 'Leave Approvals', icon: '✅' },
-  { path: '/admin/payroll', label: 'Payroll', icon: '💰' },
-  { path: '/reports', label: 'Reports', icon: '📈' },
+  { path: '/admin/dashboard', label: 'Dashboard', icon: <DashboardIcon size={18} /> },
+  { path: '/admin/employees', label: 'Employees', icon: <EmployeesIcon size={18} /> },
+  { path: '/attendance', label: 'Attendance', icon: <AttendanceIcon size={18} /> },
+  { path: '/admin/leave-approvals', label: 'Leave Approvals', icon: <LeaveApprovalIcon size={18} /> },
+  { path: '/admin/payroll', label: 'Payroll', icon: <PayrollIcon size={18} /> },
+  { path: '/reports', label: 'Reports', icon: <ReportsIcon size={18} /> },
 ];
 
 export default function Sidebar() {
@@ -59,7 +71,7 @@ export default function Sidebar() {
             to={item.path}
             className={({ isActive }) => `sidebar__link ${isActive ? 'sidebar__link--active' : ''}`}
           >
-            <span className="sidebar__link-icon">{item.icon}</span>
+            <span className="sidebar__link-icon" style={{ display: 'inline-flex', alignItems: 'center' }}>{item.icon}</span>
             <span className="sidebar__link-label">{item.label}</span>
           </NavLink>
         ))}
@@ -74,7 +86,7 @@ export default function Sidebar() {
           </div>
         </div>
         <button className="sidebar__logout" onClick={handleLogout}>
-          <span>🚪</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center' }}><LogoutIcon size={16} /></span>
           <span>Logout</span>
         </button>
       </div>

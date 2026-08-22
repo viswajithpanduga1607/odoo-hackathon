@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { applyForLeave, fetchEmployeeLeaveRequests } from '../../firebase/leaveService';
+import { AlertIcon, CheckCircleIcon } from '../../components/common/Icons';
 
 export default function LeaveApply() {
   const { user, profile } = useAuth();
@@ -71,7 +72,6 @@ export default function LeaveApply() {
     setSuccess('');
 
     try {
-      // Create real document in Firestore leaveRequests collection
       await applyForLeave({
         uid: user.uid,
         profile: profile || {},
@@ -142,15 +142,15 @@ export default function LeaveApply() {
       </div>
 
       {error && (
-        <div className="alert alert--error" style={{ marginBottom: 'var(--space-6)' }}>
-          <span>⚠️</span>
+        <div className="alert alert--error" style={{ marginBottom: 'var(--space-6)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <AlertIcon size={18} />
           <span>{error}</span>
         </div>
       )}
 
       {success && (
-        <div className="alert alert--success" style={{ marginBottom: 'var(--space-6)' }}>
-          <span>✅</span>
+        <div className="alert alert--success" style={{ marginBottom: 'var(--space-6)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <CheckCircleIcon size={18} />
           <span>{success}</span>
         </div>
       )}

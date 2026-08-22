@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { fetchUserProfile } from '../../firebase/userService';
 import { getSalaryBreakdown, documents } from '../../data/mockData';
+import { EditIcon, DocumentIcon, DownloadIcon } from '../../components/common/Icons';
 
 export default function ProfileView() {
   const { user, profile: authProfile } = useAuth();
@@ -54,7 +55,10 @@ export default function ProfileView() {
           <h1 className="page-title">My Profile</h1>
           <p className="page-subtitle">View your personal and professional details</p>
         </div>
-        <Link to="/profile/edit" className="btn btn--primary">✏️ Edit Profile</Link>
+        <Link to="/profile/edit" className="btn btn--primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+          <EditIcon size={15} />
+          <span>Edit Profile</span>
+        </Link>
       </div>
 
       {/* Profile Header */}
@@ -169,13 +173,18 @@ export default function ProfileView() {
           {documents.map(doc => (
             <div key={doc.id} className="document-item">
               <div className="document-item__info">
-                <div className="document-item__icon">📄</div>
+                <div className="document-item__icon" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                  <DocumentIcon size={18} />
+                </div>
                 <div>
                   <div className="document-item__name">{doc.name}</div>
                   <div className="document-item__meta">{doc.type} · {doc.size} · Uploaded {doc.uploadedOn}</div>
                 </div>
               </div>
-              <button className="btn btn--ghost btn--sm">⬇ Download</button>
+              <button className="btn btn--ghost btn--sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                <DownloadIcon size={14} />
+                <span>Download</span>
+              </button>
             </div>
           ))}
         </div>

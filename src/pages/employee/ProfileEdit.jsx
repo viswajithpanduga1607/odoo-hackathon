@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { fetchUserProfile, updateEmployeeSelfProfile } from '../../firebase/userService';
+import { CameraIcon, LockIcon, AlertIcon, CheckCircleIcon } from '../../components/common/Icons';
 
 export default function ProfileEdit() {
   const navigate = useNavigate();
@@ -55,7 +56,6 @@ export default function ProfileEdit() {
     setSuccess('');
 
     try {
-      // Updates only phone, address, profilePictureUrl according to security rules
       await updateEmployeeSelfProfile(user.uid, {
         phone: form.phone,
         address: form.address,
@@ -103,15 +103,15 @@ export default function ProfileEdit() {
       </div>
 
       {error && (
-        <div className="alert alert--error" style={{ marginBottom: 'var(--space-6)' }}>
-          <span>⚠️</span>
+        <div className="alert alert--error" style={{ marginBottom: 'var(--space-6)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <AlertIcon size={18} />
           <span>{error}</span>
         </div>
       )}
 
       {success && (
-        <div className="alert alert--success" style={{ marginBottom: 'var(--space-6)' }}>
-          <span>✅</span>
+        <div className="alert alert--success" style={{ marginBottom: 'var(--space-6)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <CheckCircleIcon size={18} />
           <span>{success}</span>
         </div>
       )}
@@ -121,7 +121,9 @@ export default function ProfileEdit() {
         <div className="card" style={{ marginBottom: 'var(--space-6)', display: 'flex', alignItems: 'center', gap: 'var(--space-6)' }}>
           <div className="profile-avatar-wrapper">
             <img src={displayAvatar} alt={displayName} className="profile-avatar" style={{ width: '80px', height: '80px' }} />
-            <div className="profile-avatar-edit">📷</div>
+            <div className="profile-avatar-edit" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+              <CameraIcon size={14} color="#FFFFFF" />
+            </div>
           </div>
           <div style={{ flex: 1 }}>
             <h3 style={{ color: 'var(--color-text-primary)', fontFamily: 'var(--font-headline)', fontWeight: 600 }}>{displayName}</h3>
@@ -147,11 +149,17 @@ export default function ProfileEdit() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
               <div className="form-group">
-                <label className="form-label">Full Name 🔒</label>
+                <label className="form-label" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span>Full Name</span>
+                  <LockIcon size={13} color="var(--color-text-muted)" />
+                </label>
                 <input type="text" className="form-input" value={displayName} disabled />
               </div>
               <div className="form-group">
-                <label className="form-label">Email 🔒</label>
+                <label className="form-label" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span>Email</span>
+                  <LockIcon size={13} color="var(--color-text-muted)" />
+                </label>
                 <input type="email" className="form-input" value={displayEmail} disabled />
               </div>
               <div className="form-group">
@@ -166,7 +174,10 @@ export default function ProfileEdit() {
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">Date of Birth 🔒</label>
+                <label className="form-label" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span>Date of Birth</span>
+                  <LockIcon size={13} color="var(--color-text-muted)" />
+                </label>
                 <input type="text" className="form-input" value={profile?.dob || '1992-05-15'} disabled />
               </div>
             </div>
@@ -200,15 +211,24 @@ export default function ProfileEdit() {
             </div>
             <div className="grid-3">
               <div className="form-group">
-                <label className="form-label">Department 🔒</label>
+                <label className="form-label" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span>Department</span>
+                  <LockIcon size={13} color="var(--color-text-muted)" />
+                </label>
                 <input type="text" className="form-input" value={displayDepartment} disabled />
               </div>
               <div className="form-group">
-                <label className="form-label">Designation 🔒</label>
+                <label className="form-label" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span>Designation</span>
+                  <LockIcon size={13} color="var(--color-text-muted)" />
+                </label>
                 <input type="text" className="form-input" value={displayRole} disabled />
               </div>
               <div className="form-group">
-                <label className="form-label">Date of Joining 🔒</label>
+                <label className="form-label" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span>Date of Joining</span>
+                  <LockIcon size={13} color="var(--color-text-muted)" />
+                </label>
                 <input type="text" className="form-input" value={displayDateJoined} disabled />
               </div>
             </div>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { signUpUser, validatePassword } from '../../firebase/authService';
+import { EyeIcon, EyeOffIcon, AlertIcon, MailIcon } from '../../components/common/Icons';
 
 export default function SignUp() {
   const navigate = useNavigate();
@@ -56,7 +57,6 @@ export default function SignUp() {
     setLoading(true);
 
     try {
-      // Create Firebase Auth user, send verification email, and write to Firestore users/{uid}
       const result = await signUpUser({
         employeeId: form.employeeId,
         fullName: form.fullName,
@@ -106,8 +106,8 @@ export default function SignUp() {
           <p className="auth-form__subtitle">Join Dayflow to manage your HR needs</p>
 
           {generalError && (
-            <div className="alert alert--error" style={{ marginBottom: '1.5rem' }}>
-              <span>⚠️</span>
+            <div className="alert alert--error" style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <AlertIcon size={18} />
               <span>{generalError}</span>
             </div>
           )}
@@ -115,7 +115,7 @@ export default function SignUp() {
           {successMessage && (
             <div className="alert alert--success" style={{ marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span>✉️</span>
+                <MailIcon size={18} />
                 <span style={{ fontWeight: 600 }}>Verification Required</span>
               </div>
               <p style={{ fontSize: 'var(--text-sm)', lineHeight: '1.4' }}>{successMessage}</p>
@@ -184,8 +184,9 @@ export default function SignUp() {
                 className="password-toggle"
                 onClick={() => setShowPassword(!showPassword)}
                 tabIndex="-1"
+                title={showPassword ? 'Hide password' : 'Show password'}
               >
-                {showPassword ? '🙈' : '👁️'}
+                {showPassword ? <EyeOffIcon size={16} /> : <EyeIcon size={16} />}
               </button>
             </div>
             {errors.password ? (
@@ -212,8 +213,9 @@ export default function SignUp() {
                 className="password-toggle"
                 onClick={() => setShowConfirm(!showConfirm)}
                 tabIndex="-1"
+                title={showConfirm ? 'Hide password' : 'Show password'}
               >
-                {showConfirm ? '🙈' : '👁️'}
+                {showConfirm ? <EyeOffIcon size={16} /> : <EyeIcon size={16} />}
               </button>
             </div>
             {errors.confirmPassword && <span className="form-error">{errors.confirmPassword}</span>}

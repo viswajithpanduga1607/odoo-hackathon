@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { signInUser, resendVerificationEmail } from '../../firebase/authService';
+import { EyeIcon, EyeOffIcon, AlertIcon, CheckCircleIcon, MailIcon } from '../../components/common/Icons';
 
 export default function SignIn() {
   const navigate = useNavigate();
@@ -56,7 +57,6 @@ export default function SignIn() {
         password: form.password,
       });
 
-      // Successful verified login — route based on role
       const userRole = result.role || result.profile?.role || 'employee';
 
       if (userRole === 'admin') {
@@ -105,7 +105,7 @@ export default function SignIn() {
           {error && (
             <div className="alert alert--error" style={{ marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span>⚠️</span>
+                <AlertIcon size={18} />
                 <span>{error}</span>
               </div>
               {isUnverified && (
@@ -114,17 +114,18 @@ export default function SignIn() {
                   onClick={handleResendVerification}
                   disabled={resending}
                   className="btn btn--secondary btn--sm"
-                  style={{ alignSelf: 'flex-start', marginTop: '0.25rem' }}
+                  style={{ alignSelf: 'flex-start', marginTop: '0.25rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
                 >
-                  {resending ? 'Resending...' : '✉️ Resend Verification Email'}
+                  <MailIcon size={14} />
+                  <span>{resending ? 'Resending...' : 'Resend Verification Email'}</span>
                 </button>
               )}
             </div>
           )}
 
           {successInfo && (
-            <div className="alert alert--success" style={{ marginBottom: '1.5rem' }}>
-              <span>✅</span>
+            <div className="alert alert--success" style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <CheckCircleIcon size={18} />
               <span>{successInfo}</span>
             </div>
           )}
@@ -161,8 +162,9 @@ export default function SignIn() {
                 className="password-toggle"
                 onClick={() => setShowPassword(!showPassword)}
                 tabIndex="-1"
+                title={showPassword ? 'Hide password' : 'Show password'}
               >
-                {showPassword ? '🙈' : '👁️'}
+                {showPassword ? <EyeOffIcon size={16} /> : <EyeIcon size={16} />}
               </button>
             </div>
           </div>

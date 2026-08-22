@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { fetchEmployeePayroll } from '../../firebase/payrollService';
+import { DownloadIcon } from '../../components/common/Icons';
 
 export default function Payroll() {
   const { user, profile } = useAuth();
@@ -127,7 +128,11 @@ export default function Payroll() {
                     <td>₹{p.deductions.toLocaleString()}</td>
                     <td style={{ fontWeight: 600 }}>₹{p.net.toLocaleString()}</td>
                     <td><span className="badge badge--paid">{p.status}</span></td>
-                    <td><button className="btn btn--ghost btn--sm" title="Download Payslip">⬇</button></td>
+                    <td>
+                      <button className="btn btn--ghost btn--sm" title="Download Payslip" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                        <DownloadIcon size={14} />
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>

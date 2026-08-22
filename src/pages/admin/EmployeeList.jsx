@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchAllEmployees } from '../../firebase/userService';
 import { employees as mockEmployees } from '../../data/mockData';
+import { EditIcon } from '../../components/common/Icons';
 
 export default function EmployeeList() {
   const [employees, setEmployees] = useState([]);
@@ -114,8 +115,9 @@ export default function EmployeeList() {
                         </span>
                       </td>
                       <td>
-                        <Link to={`/admin/profile/edit/${targetUid}`} className="btn btn--ghost btn--sm">
-                          ✏️ Edit
+                        <Link to={`/admin/profile/edit/${targetUid}`} className="btn btn--ghost btn--sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+                          <EditIcon size={13} />
+                          <span>Edit</span>
                         </Link>
                       </td>
                     </tr>

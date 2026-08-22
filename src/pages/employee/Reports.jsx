@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { fetchAllEmployees } from '../../firebase/userService';
 import { fetchAllAttendance, fetchEmployeeAttendance } from '../../firebase/attendanceService';
 import { fetchAllPayrolls, fetchEmployeePayroll } from '../../firebase/payrollService';
+import { DownloadIcon } from '../../components/common/Icons';
 
 export default function Reports() {
   const { user, isAdmin } = useAuth();
@@ -123,8 +124,13 @@ export default function Reports() {
           <h1 className="page-title">Reports</h1>
           <p className="page-subtitle">Real-time attendance summaries and salary slip records from Firestore</p>
         </div>
-        <button className="btn btn--secondary" onClick={handleExportCSV}>
-          📥 Export CSV
+        <button
+          className="btn btn--secondary"
+          onClick={handleExportCSV}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+        >
+          <DownloadIcon size={15} />
+          <span>Export CSV</span>
         </button>
       </div>
 

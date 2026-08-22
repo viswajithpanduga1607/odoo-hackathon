@@ -1,24 +1,28 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { fetchAllLeaveRequests, reviewLeaveRequest } from '../../firebase/leaveService';
+import { leaveRequests as mockLeaveRequests } from '../../data/mockData';
+import { AlertIcon, CheckCircleIcon, CheckIcon, XIcon } from '../../components/common/Icons';
 
 export default function LeaveApprovals() {
   const { user, profile } = useAuth();
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('All');
-  const [comments, setComments] = useState({});
-  const [actionLoading, setActionLoading] = useState({});
+  const [filter, setFilter] = useState('pending');
+  const [activeModal, setActiveModal] = useState(null);
+  const [adminComment, setAdminComment] = useState('');
+  const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
   const loadRequests = async () => {
     try {
-      const list = await fetchAllLeaveRequests();
-      setRequests(list);
+      const liveList = await fetchAllLeaveRequests();
+      setRequests(liveList.length > 0 ? liveList : mockLeaveRequests);
     } catch (err) {
-      console.error('Error loading leave requests for admin:', err);
-      setError('Failed to load leave requests from Firestore.');
+      console.error('Error loading leave requests:', err);
+      setRequests(mockLeaveRequests);
+      setError('Failed to load leave requests.');
     } finally {
       setLoading(false);
     }
@@ -28,39 +32,47 @@ export default function LeaveApprovals() {
     loadRequests();
   }, []);
 
-  const handleAction = async (id, newStatus) => {
-    setActionLoading(prev => ({ ...prev, [id]: true }));
+  const openReviewModal = (req, action) => {
+    setActiveModal({ req, action });
+    setAdminComment('');
+    if (error) setError('');
+    if (success) setSuccess('');
+  };
+
+  const handleConfirmReview = async () => {
+    if (!activeModal) return;
+    const { req, action } = activeModal;
+    setActionLoading(true);
     setError('');
     setSuccess('');
 
     try {
-      const commentText = comments[id] || '';
       const adminName = profile?.fullName || user?.displayName || 'HR Admin';
-
-      await reviewLeaveRequest(id, {
-        status: newStatus,
-        adminComment: commentText,
+      await reviewLeaveRequest(req.id, {
+        status: action === 'approve' ? 'approved' : 'rejected',
+        adminComment,
         adminName,
       });
 
-      setSuccess(`Leave request successfully marked as ${newStatus}!`);
-      // Update locally
-      setRequests(prev => prev.map(r =>
-        r.id === id ? { ...r, status: newStatus, adminComment: commentText, reviewedBy: adminName } : r
-      ));
+      setSuccess(`Leave request from ${req.employeeName || 'employee'} has been ${action === 'approve' ? 'approved' : 'rejected'}!`);
+      setActiveModal(null);
+      await loadRequests();
     } catch (err) {
       console.error('Error reviewing leave request:', err);
-      setError(err.message || 'Failed to update leave request status.');
+      setError(err.message || 'Failed to update leave request.');
     } finally {
-      setActionLoading(prev => ({ ...prev, [id]: false }));
+      setActionLoading(false);
     }
   };
 
-  const filtered = filter === 'All'
-    ? requests
-    : requests.filter(r => (r.status || '').toLowerCase() === filter.toLowerCase());
+  const filtered = requests.filter(r => {
+    if (filter === 'all') return true;
+    return (r.status || '').toLowerCase() === filter;
+  });
 
   const pendingCount = requests.filter(r => (r.status || '').toLowerCase() === 'pending').length;
+  const approvedCount = requests.filter(r => (r.status || '').toLowerCase() === 'approved').length;
+  const rejectedCount = requests.filter(r => (r.status || '').toLowerCase() === 'rejected').length;
 
   const badgeClass = (status) => {
     const s = (status || '').toLowerCase();
@@ -79,143 +91,187 @@ export default function LeaveApprovals() {
       </div>
 
       {error && (
-        <div className="alert alert--error" style={{ marginBottom: 'var(--space-6)' }}>
-          <span>⚠️</span>
+        <div className="alert alert--error" style={{ marginBottom: 'var(--space-6)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <AlertIcon size={18} />
           <span>{error}</span>
         </div>
       )}
 
       {success && (
-        <div className="alert alert--success" style={{ marginBottom: 'var(--space-6)' }}>
-          <span>✅</span>
+        <div className="alert alert--success" style={{ marginBottom: 'var(--space-6)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <CheckCircleIcon size={18} />
           <span>{success}</span>
         </div>
       )}
 
       {/* Filter Tabs */}
       <div className="tabs" style={{ marginBottom: 'var(--space-6)', width: 'fit-content' }}>
-        {['All', 'Pending', 'Approved', 'Rejected'].map(f => (
-          <button
-            key={f}
-            className={`tab ${filter === f ? 'tab--active' : ''}`}
-            onClick={() => setFilter(f)}
-          >
-            {f} {f === 'Pending' && pendingCount > 0 && (
-              <span style={{ marginLeft: '4px', fontSize: 'var(--text-xs)', background: 'var(--color-warning)', color: '#0F0F23', padding: '2px 6px', borderRadius: '999px', fontWeight: 700 }}>
-                {pendingCount}
-              </span>
-            )}
-          </button>
-        ))}
+        <button className={`tab ${filter === 'pending' ? 'tab--active' : ''}`} onClick={() => setFilter('pending')}>
+          Pending Review ({pendingCount})
+        </button>
+        <button className={`tab ${filter === 'approved' ? 'tab--active' : ''}`} onClick={() => setFilter('approved')}>
+          Approved ({approvedCount})
+        </button>
+        <button className={`tab ${filter === 'rejected' ? 'tab--active' : ''}`} onClick={() => setFilter('rejected')}>
+          Rejected ({rejectedCount})
+        </button>
+        <button className={`tab ${filter === 'all' ? 'tab--active' : ''}`} onClick={() => setFilter('all')}>
+          All Requests ({requests.length})
+        </button>
       </div>
 
-      {/* Leave Request Cards */}
-      <div>
-        {loading ? (
-          <div className="card" style={{ textAlign: 'center', padding: 'var(--space-12)', color: 'var(--color-text-muted)' }}>
-            Loading leave requests from Firestore...
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="card" style={{ textAlign: 'center', padding: 'var(--space-12)', color: 'var(--color-text-muted)' }}>
-            No {filter.toLowerCase()} leave requests found.
-          </div>
-        ) : (
-          filtered.map(lr => {
-            const isPending = (lr.status || '').toLowerCase() === 'pending';
-            const empName = lr.employeeName || 'Employee';
-            const empId = lr.employeeDisplayId || lr.employeeId || 'EMP';
-            const avatar = lr.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(empName)}`;
-            const isProcessing = !!actionLoading[lr.id];
+      {/* Leave Request Table */}
+      <div className="card">
+        <div className="data-table-container">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Leave Type</th>
+                <th>Dates</th>
+                <th>Days</th>
+                <th>Reason / Remarks</th>
+                <th>Status</th>
+                <th>Admin Note</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan="8" style={{ textAlign: 'center', padding: 'var(--space-8)', color: 'var(--color-text-muted)' }}>
+                    Loading leave requests from Firestore...
+                  </td>
+                </tr>
+              ) : filtered.length === 0 ? (
+                <tr>
+                  <td colSpan="8" style={{ textAlign: 'center', padding: 'var(--space-8)', color: 'var(--color-text-muted)' }}>
+                    No leave requests found in this category.
+                  </td>
+                </tr>
+              ) : (
+                filtered.map(req => {
+                  const empName = req.employeeName || 'Employee';
+                  const empId = req.employeeDisplayId || req.employeeId || 'EMP';
+                  const avatar = req.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(empName)}`;
+                  const isPending = (req.status || '').toLowerCase() === 'pending';
 
-            return (
-              <div key={lr.id} className="leave-request-card">
-                <div className="leave-request-card__header">
-                  <div className="leave-request-card__employee">
-                    <img src={avatar} alt={empName} className="avatar" />
-                    <div>
-                      <div style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>{empName}</div>
-                      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>{empId}</div>
-                    </div>
-                  </div>
-                  <span className={`badge ${badgeClass(lr.status)}`}>
-                    {lr.status ? lr.status.charAt(0).toUpperCase() + lr.status.slice(1) : 'Pending'}
-                  </span>
-                </div>
-
-                <div className="leave-request-card__details">
-                  <div>
-                    <div className="leave-request-card__detail-label">Leave Type</div>
-                    <div className="leave-request-card__detail-value">
-                      <span className={`badge ${lr.leaveType === 'sick' ? 'badge--sick-leave' : lr.leaveType === 'unpaid' ? 'badge--warning' : 'badge--info'}`}>
-                        {lr.leaveType ? `${lr.leaveType.charAt(0).toUpperCase() + lr.leaveType.slice(1)} Leave` : 'Leave'}
-                      </span>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="leave-request-card__detail-label">Duration</div>
-                    <div className="leave-request-card__detail-value">{lr.startDate || lr.from} → {lr.endDate || lr.to}</div>
-                  </div>
-                  <div>
-                    <div className="leave-request-card__detail-label">Days</div>
-                    <div className="leave-request-card__detail-value">{lr.days} {Number(lr.days) === 1 ? 'day' : 'days'}</div>
-                  </div>
-                  <div>
-                    <div className="leave-request-card__detail-label">Applied On</div>
-                    <div className="leave-request-card__detail-value">
-                      {lr.createdAt ? new Date(lr.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '-'}
-                    </div>
-                  </div>
-                </div>
-
-                {lr.remarks && (
-                  <div style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-4)', padding: 'var(--space-3)', background: 'var(--color-bg-primary)', borderRadius: 'var(--radius-md)' }}>
-                    <strong style={{ color: 'var(--color-text-muted)', fontSize: 'var(--text-xs)', display: 'block', marginBottom: '4px' }}>
-                      REASON / REMARKS:
-                    </strong>
-                    {lr.remarks}
-                  </div>
-                )}
-
-                {lr.adminComment && (
-                  <div style={{ fontSize: 'var(--text-sm)', color: 'var(--color-primary)', marginBottom: 'var(--space-4)', padding: 'var(--space-3)', background: 'var(--color-primary-light)', borderRadius: 'var(--radius-md)' }}>
-                    <strong style={{ fontSize: 'var(--text-xs)', display: 'block', marginBottom: '2px' }}>
-                      HR NOTE ({lr.reviewedBy || 'Admin'}):
-                    </strong>
-                    {lr.adminComment}
-                  </div>
-                )}
-
-                {isPending && (
-                  <div className="leave-request-card__actions">
-                    <input
-                      type="text"
-                      className="form-input leave-request-card__comment"
-                      placeholder="Add an admin comment / note (optional)..."
-                      value={comments[lr.id] || ''}
-                      onChange={(e) => setComments({ ...comments, [lr.id]: e.target.value })}
-                      disabled={isProcessing}
-                    />
-                    <button
-                      className="btn btn--success btn--sm"
-                      onClick={() => handleAction(lr.id, 'approved')}
-                      disabled={isProcessing}
-                    >
-                      {isProcessing ? 'Saving...' : '✓ Approve'}
-                    </button>
-                    <button
-                      className="btn btn--danger btn--sm"
-                      onClick={() => handleAction(lr.id, 'rejected')}
-                      disabled={isProcessing}
-                    >
-                      {isProcessing ? 'Saving...' : '✗ Reject'}
-                    </button>
-                  </div>
-                )}
-              </div>
-            );
-          })
-        )}
+                  return (
+                    <tr key={req.id}>
+                      <td>
+                        <div className="employee-cell">
+                          <img src={avatar} alt={empName} className="avatar avatar--sm" />
+                          <div className="employee-cell__info">
+                            <span className="employee-cell__name">{empName}</span>
+                            <span className="employee-cell__id">{empId}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <span className={`badge ${req.leaveType === 'sick' ? 'badge--sick-leave' : 'badge--info'}`}>
+                          {req.leaveType ? `${req.leaveType.charAt(0).toUpperCase() + req.leaveType.slice(1)} Leave` : 'Leave'}
+                        </span>
+                      </td>
+                      <td>{req.startDate || req.from} → {req.endDate || req.to}</td>
+                      <td>{req.days} {Number(req.days) === 1 ? 'day' : 'days'}</td>
+                      <td style={{ maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={req.remarks}>
+                        {req.remarks || 'No remarks provided'}
+                      </td>
+                      <td>
+                        <span className={`badge ${badgeClass(req.status)}`}>
+                          {req.status ? req.status.charAt(0).toUpperCase() + req.status.slice(1) : 'Pending'}
+                        </span>
+                      </td>
+                      <td style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', maxWidth: '160px' }}>
+                        {req.adminComment || (isPending ? '—' : 'None')}
+                      </td>
+                      <td>
+                        {isPending ? (
+                          <div className="action-buttons" style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                            <button
+                              className="btn btn--success btn--sm"
+                              onClick={() => openReviewModal(req, 'approve')}
+                              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}
+                            >
+                              <CheckIcon size={14} />
+                              <span>Approve</span>
+                            </button>
+                            <button
+                              className="btn btn--danger btn--sm"
+                              onClick={() => openReviewModal(req, 'reject')}
+                              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}
+                            >
+                              <XIcon size={14} />
+                              <span>Reject</span>
+                            </button>
+                          </div>
+                        ) : (
+                          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>
+                            Reviewed by {req.reviewedBy || 'Admin'}
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
+
+      {/* Review Modal */}
+      {activeModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.7)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+        }}>
+          <div className="card" style={{ maxWidth: '480px', width: '90%', animation: 'slideIn 0.2s ease' }}>
+            <div className="card__header">
+              <h3 className="card__title">
+                {activeModal.action === 'approve' ? 'Approve Leave Request' : 'Reject Leave Request'}
+              </h3>
+            </div>
+            <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--text-sm)', marginBottom: 'var(--space-4)' }}>
+              Confirm {activeModal.action === 'approve' ? 'approval' : 'rejection'} for{' '}
+              <strong>{activeModal.req.employeeName || 'Employee'}</strong> from{' '}
+              <strong>{activeModal.req.startDate || activeModal.req.from}</strong> to{' '}
+              <strong>{activeModal.req.endDate || activeModal.req.to}</strong> ({activeModal.req.days} days).
+            </p>
+            <div className="form-group" style={{ marginBottom: 'var(--space-6)' }}>
+              <label className="form-label">Admin Comment / Note (Optional)</label>
+              <textarea
+                className="form-textarea"
+                placeholder="Add comments for the employee..."
+                value={adminComment}
+                onChange={(e) => setAdminComment(e.target.value)}
+                style={{ minHeight: '80px' }}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: 'var(--space-3)', justifyContent: 'flex-end' }}>
+              <button className="btn btn--secondary" onClick={() => setActiveModal(null)} disabled={actionLoading}>
+                Cancel
+              </button>
+              <button
+                className={`btn ${activeModal.action === 'approve' ? 'btn--success' : 'btn--danger'}`}
+                onClick={handleConfirmReview}
+                disabled={actionLoading}
+              >
+                {actionLoading ? 'Saving...' : `Confirm ${activeModal.action === 'approve' ? 'Approve' : 'Reject'}`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

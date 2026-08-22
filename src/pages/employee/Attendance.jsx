@@ -8,6 +8,7 @@ import {
   fetchAllAttendance,
 } from '../../firebase/attendanceService';
 import { fetchAllEmployees } from '../../firebase/userService';
+import { AlertIcon, CheckCircleIcon, CheckIcon, AttendanceIcon, LogoutIcon } from '../../components/common/Icons';
 
 export default function Attendance() {
   const { user, profile, isAdmin } = useAuth();
@@ -70,12 +71,10 @@ export default function Attendance() {
 
     try {
       if (!todayRecord) {
-        // Check in
         const newRecord = await checkInUser(user.uid, profile || {});
         setTodayRecord(newRecord);
-        setSuccess('Successfully checked in!');
+        setSuccess('Successfully checked in for today!');
       } else if (todayRecord && todayRecord.checkOut === '-') {
-        // Check out
         await checkOutUser(todayRecord.id, todayRecord.checkIn);
         setSuccess('Successfully checked out!');
       }
@@ -118,20 +117,20 @@ export default function Attendance() {
       </div>
 
       {error && (
-        <div className="alert alert--error" style={{ marginBottom: 'var(--space-6)' }}>
-          <span>⚠️</span>
+        <div className="alert alert--error" style={{ marginBottom: 'var(--space-6)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <AlertIcon size={18} />
           <span>{error}</span>
         </div>
       )}
 
       {success && (
-        <div className="alert alert--success" style={{ marginBottom: 'var(--space-6)' }}>
-          <span>✅</span>
+        <div className="alert alert--success" style={{ marginBottom: 'var(--space-6)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <CheckCircleIcon size={18} />
           <span>{success}</span>
         </div>
       )}
 
-      {/* Check In / Check Out Card (For Employee or Admin personal check-in) */}
+      {/* Check In / Check Out Card */}
       {!isAdmin && (
         <div className="checkin-section">
           <div className="checkin-status">
@@ -174,16 +173,30 @@ export default function Attendance() {
             </div>
 
             {todayRecord && todayRecord.checkOut !== '-' ? (
-              <span className="badge badge--success" style={{ padding: '0.75rem 1.25rem', fontSize: 'var(--text-sm)' }}>
-                ✓ Completed Today
+              <span className="badge badge--success" style={{ padding: '0.75rem 1.25rem', fontSize: 'var(--text-sm)', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+                <CheckIcon size={16} />
+                <span>Completed Today</span>
               </span>
             ) : (
               <button
                 className={`btn ${isCheckedIn ? 'btn--danger' : 'btn--success'} btn--lg`}
                 onClick={handleCheckInOut}
                 disabled={actionLoading}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
               >
-                {actionLoading ? 'Processing...' : isCheckedIn ? '🔴 Check Out' : '🟢 Check In'}
+                {actionLoading ? (
+                  'Processing...'
+                ) : isCheckedIn ? (
+                  <>
+                    <LogoutIcon size={18} />
+                    <span>Check Out</span>
+                  </>
+                ) : (
+                  <>
+                    <AttendanceIcon size={18} />
+                    <span>Check In</span>
+                  </>
+                )}
               </button>
             )}
           </div>
