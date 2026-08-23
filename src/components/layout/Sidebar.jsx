@@ -27,10 +27,11 @@ const employeeNav = [
 const adminNav = [
   { path: '/admin/dashboard', label: 'Dashboard', icon: <DashboardIcon size={18} /> },
   { path: '/admin/employees', label: 'Employees', icon: <EmployeesIcon size={18} /> },
-  { path: '/attendance', label: 'Attendance', icon: <AttendanceIcon size={18} /> },
+  { path: '/admin/profile', label: 'Profile', icon: <ProfileIcon size={18} /> },
+  { path: '/admin/attendance', label: 'Attendance', icon: <AttendanceIcon size={18} /> },
   { path: '/admin/leave-approvals', label: 'Leave Approvals', icon: <LeaveApprovalIcon size={18} /> },
   { path: '/admin/payroll', label: 'Payroll', icon: <PayrollIcon size={18} /> },
-  { path: '/reports', label: 'Reports', icon: <ReportsIcon size={18} /> },
+  { path: '/admin/reports', label: 'Reports', icon: <ReportsIcon size={18} /> },
 ];
 
 export default function Sidebar() {

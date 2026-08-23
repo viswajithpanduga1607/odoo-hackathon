@@ -60,10 +60,13 @@ function App() {
           <Route element={<DashboardLayout />}>
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/employees" element={<EmployeeList />} />
+            <Route path="/admin/profile" element={<ProfileView />} />
             <Route path="/admin/profile/edit/:id" element={<AdminProfileEdit />} />
             <Route path="/admin/profile/edit" element={<AdminProfileEdit />} />
+            <Route path="/admin/attendance" element={<Attendance />} />
             <Route path="/admin/leave-approvals" element={<LeaveApprovals />} />
             <Route path="/admin/payroll" element={<AdminPayroll />} />
+            <Route path="/admin/reports" element={<Reports />} />
           </Route>
 
           {/* Default redirect */}
