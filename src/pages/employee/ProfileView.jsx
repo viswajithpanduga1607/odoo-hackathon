@@ -8,19 +8,34 @@ import { EditIcon, DocumentIcon, DownloadIcon } from '../../components/common/Ic
 export default function ProfileView() {
   const { user, profile: authProfile } = useAuth();
   const [profile, setProfile] = useState(authProfile);
-  const [loading, setLoading] = useState(!authProfile);
+  const [loading, setLoading] = useState(true);
+
+  // Keep in sync when authProfile is updated by AuthContext
+  useEffect(() => {
+    if (authProfile) {
+      setProfile(authProfile);
+    }
+  }, [authProfile]);
 
   useEffect(() => {
     async function load() {
       if (user?.uid) {
         try {
           const liveProfile = await fetchUserProfile(user.uid);
-          if (liveProfile) setProfile(liveProfile);
+          if (liveProfile) {
+            setProfile(liveProfile);
+          } else if (authProfile) {
+            // Fallback to authProfile if Firestore returns nothing
+            setProfile(authProfile);
+          }
         } catch (err) {
           console.error('Error fetching profile:', err);
+          if (authProfile) setProfile(authProfile);
         } finally {
           setLoading(false);
         }
+      } else {
+        setLoading(false);
       }
     }
     load();

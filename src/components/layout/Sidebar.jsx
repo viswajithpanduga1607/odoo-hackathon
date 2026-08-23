@@ -1,7 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { currentUser as defaultMockUser } from '../../data/mockData';
 import {
   DashboardIcon,
   ProfileIcon,
@@ -36,13 +35,13 @@ const adminNav = [
 
 export default function Sidebar() {
   const navigate = useNavigate();
-  const { profile, role, logout } = useAuth();
+  const { user, profile, role, logout } = useAuth();
 
-  const isAdmin = (role || defaultMockUser.role) === 'admin';
+  const isAdmin = role === 'admin';
   const navItems = isAdmin ? adminNav : employeeNav;
 
-  const displayName = profile?.fullName || defaultMockUser.name;
-  const avatarUrl = profile?.profilePictureUrl || defaultMockUser.avatar;
+  const displayName = profile?.fullName || user?.displayName || user?.email?.split('@')[0] || 'User';
+  const avatarUrl = profile?.profilePictureUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(displayName)}`;
 
   const handleLogout = async () => {
     try {

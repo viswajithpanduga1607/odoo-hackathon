@@ -1,7 +1,6 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { currentUser as defaultMockUser } from '../../data/mockData';
 import { BellIcon } from '../common/Icons';
 import './TopBar.css';
 
@@ -22,11 +21,11 @@ const routeTitles = {
 
 export default function TopBar() {
   const location = useLocation();
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
   const title = routeTitles[location.pathname] || 'Dayflow';
 
-  const displayName = profile?.fullName || defaultMockUser.name;
-  const avatarUrl = profile?.profilePictureUrl || defaultMockUser.avatar;
+  const displayName = profile?.fullName || user?.displayName || user?.email?.split('@')[0] || 'User';
+  const avatarUrl = profile?.profilePictureUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(displayName)}`;
 
   return (
     <header className="topbar">

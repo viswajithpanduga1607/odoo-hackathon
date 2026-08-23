@@ -4,7 +4,6 @@ import { getDoc } from 'firebase/firestore';
 import { auth } from '../firebase/config';
 import { userDocRef } from '../firebase/schema';
 import { logoutUser } from '../firebase/authService';
-import { currentUser as mockCurrentUser } from '../data/mockData';
 
 const AuthContext = createContext(null);
 
@@ -22,24 +21,36 @@ export function AuthProvider({ children }) {
           const docSnap = await getDoc(userDocRef(firebaseUser.uid));
           if (docSnap.exists()) {
             const data = docSnap.data();
-            setProfile(data);
+            // Always merge Firebase Auth displayName as fallback so fullName is never empty
+            const mergedProfile = {
+              ...data,
+              fullName: data.fullName || firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+              email: data.email || firebaseUser.email,
+              profilePictureUrl: data.profilePictureUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(data.fullName || data.email || firebaseUser.uid)}`,
+            };
+            setProfile(mergedProfile);
             const userRole = data.role || 'employee';
             setRole(userRole);
-
-            // Sync with mockData currentUser object so existing views stay in sync
-            mockCurrentUser.id = data.employeeId || firebaseUser.uid;
-            mockCurrentUser.name = data.fullName || firebaseUser.displayName || 'User';
-            mockCurrentUser.email = data.email || firebaseUser.email;
-            mockCurrentUser.role = userRole;
-            mockCurrentUser.avatar = data.profilePictureUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(data.fullName || data.email)}`;
-            mockCurrentUser.department = data.department || (userRole === 'admin' ? 'Human Resources' : 'Engineering');
-            mockCurrentUser.designation = data.jobTitle || (userRole === 'admin' ? 'HR Administrator' : 'Software Engineer');
           } else {
-            setProfile(null);
+            // No Firestore doc yet — build a minimal profile from Firebase Auth data
+            const fallbackProfile = {
+              fullName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+              email: firebaseUser.email,
+              role: 'employee',
+              profilePictureUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(firebaseUser.displayName || firebaseUser.uid)}`,
+            };
+            setProfile(fallbackProfile);
             setRole('employee');
           }
         } catch (err) {
           console.error('Error fetching user profile:', err);
+          // Even on error, show the Auth user's name
+          setProfile({
+            fullName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+            email: firebaseUser.email,
+            role: 'employee',
+            profilePictureUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(firebaseUser.displayName || firebaseUser.uid)}`,
+          });
         }
       } else {
         setUser(null);

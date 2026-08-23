@@ -8,7 +8,7 @@ export default function ProfileEdit() {
   const navigate = useNavigate();
   const { user, profile: authProfile, setUserProfile } = useAuth();
   const [profile, setProfile] = useState(authProfile);
-  const [loading, setLoading] = useState(!authProfile);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -18,6 +18,18 @@ export default function ProfileEdit() {
     address: '',
     profilePictureUrl: '',
   });
+
+  // Keep in sync when authProfile is updated by AuthContext
+  useEffect(() => {
+    if (authProfile && !profile) {
+      setProfile(authProfile);
+      setForm({
+        phone: authProfile.phone || '',
+        address: authProfile.address || '',
+        profilePictureUrl: authProfile.profilePictureUrl || '',
+      });
+    }
+  }, [authProfile]);
 
   useEffect(() => {
     async function load() {
@@ -37,6 +49,8 @@ export default function ProfileEdit() {
         } finally {
           setLoading(false);
         }
+      } else {
+        setLoading(false);
       }
     }
     load();
